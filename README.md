@@ -70,6 +70,7 @@
     -   双击 `wechat_summary_tool.exe` 即可运行。
 
 ## 📦 项目结构
+```text
 wechat_summary_tool/
 ├── .gitignore             # Git 忽略文件配置
 ├── README.md              # 项目说明文档
@@ -93,7 +94,7 @@ wechat_summary_tool/
 ├── build/                 # PyInstaller 临时构建目录 (被 .gitignore 忽略)
 ├── temp_screenshots/      # 临时截图保存目录 (被 .gitignore 忽略)
 └── wechat_summary_tool.log # 应用程序日志文件 (被 .gitignore 忽略)
-
+```
 ## 🛠️ 打包为可执行文件 (开发者)
 
 如果您想自己打包 `.exe` 文件，请遵循以下步骤：
