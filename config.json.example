@@ -1,0 +1,15 @@
+{
+    "llm_api_key": "sk- ",
+    "chat_area_coords": {
+        "x": "85",
+        "y": "120",
+        "width": "740",
+        "height": "900"
+    },
+    "max_scrolls": "15",
+    "fullscreen": true,
+    "selected_api": "\u963f\u91cc\u4e91\u767e\u70bc",
+    "bailian_api_key": "sk- ",
+    "gemini_api_key": "",
+    "compress_images": false
+}

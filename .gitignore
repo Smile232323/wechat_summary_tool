@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/ # 忽略虚拟环境文件夹
+*.env # 忽略.env文件，因为它可能包含敏感信息
+
+# Logs
+*.log
+app.log
+wechat_summary_tool.log
+
+# Screenshots
+temp_screenshots/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Configuration (provide an example instead of the actual config)
+config.json # 忽略实际的config.json，只提交config.json.example
+
+# Other temporary files
+*.tmp
+*.bak
