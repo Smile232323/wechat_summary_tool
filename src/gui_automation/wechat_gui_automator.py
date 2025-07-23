@@ -1,8 +1,9 @@
-# src/gui_automation/wechat_gui_automator.py (终极识别版 - 修正 - 降低SSIM阈值并打印分数)
+# src/gui_automation/wechat_gui_automator.py (终极识别版 - 修正 - 修复打包后截图目录问题)
 import pyautogui
 import logging
 import time
 import os
+import sys # 新增导入 sys 模块
 from PIL import Image
 from typing import Optional, Tuple, List
 import cv2
@@ -141,11 +142,11 @@ def detect_scroll_end(current_image: Image.Image, previous_image: Image.Image, t
 
 def capture_chat_history_dynamically(
     region: Optional[Tuple[int, int, int, int]], # 此参数现在是多余的，但保留以兼容旧调用
-    screenshot_dir: str,
+    screenshot_dir: str, # 传入的是 "temp_screenshots"
     max_scrolls: int = 20,
     scroll_amount: int = -600,
     delay_between_scrolls: float = 0.5,
-    similarity_threshold: float = 0.80 # 新增参数：相似度阈值，默认值改为 0.80
+    similarity_threshold: float = 0.80
 ) -> List[str]:
     """
     动态捕获聊天记录，通过滚动和截图实现。
@@ -154,31 +155,51 @@ def capture_chat_history_dynamically(
     if not wechat_win:
         raise GUIAutomationError("未找到微信窗口，无法开始截图。")
 
+    # --- 关键修改：确定截图目录的绝对路径 ---
+    if getattr(sys, 'frozen', False): # 如果程序是PyInstaller打包的
+        # base_path 是 .exe 文件所在的目录
+        base_path = os.path.dirname(sys.executable)
+    else:
+        # 如果是直接运行Python脚本
+        # base_path 是 main_app.py 所在的目录 (项目根目录)
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        # 或者更简单，如果确保是从项目根目录运行的：base_path = os.getcwd()
+
+    # 拼接出完整的截图目录绝对路径
+    absolute_screenshot_dir = os.path.join(base_path, screenshot_dir) # screenshot_dir 仍然是 "temp_screenshots"
+
+    if not os.path.exists(absolute_screenshot_dir):
+        try:
+            os.makedirs(absolute_screenshot_dir)
+            logger.info(f"Created screenshot directory: {absolute_screenshot_dir}")
+        except OSError as e:
+            logger.error(f"Failed to create screenshot directory {absolute_screenshot_dir}: {e}", exc_info=True)
+            # 抛出更具体的错误，方便用户诊断
+            raise GUIAutomationError(f"无法创建截图目录: {absolute_screenshot_dir}. 请检查文件系统权限或路径是否有效。") from e
+    # --- 关键修改结束 ---
+
     image_paths = []
     previous_image = None
     for i in range(max_scrolls):
         logger.info(f"--- 智能滚动第 {i + 1}/{max_scrolls} 轮 ---")
         
-        # 强制截图全屏，忽略传入的 region 参数
-        current_image = capture_chat_area(wechat_win, None) # 传入None，但capture_chat_area会强制全屏
+        current_image = capture_chat_area(wechat_win, None)
         if not current_image:
             logger.warning("本次截图失败，终止滚动。")
             break
         
-        # 核心修改：先判断是否停止，再决定是否保存图片
         if previous_image and detect_scroll_end(current_image, previous_image, similarity_threshold):
             logger.info("检测到图片内容高度相似，提前停止截图，不保存当前重复图片。")
-            break # 停止循环，不保存当前这张重复的图片
+            break
         
-        # 如果没有停止，则保存当前图片
-        file_path = os.path.join(screenshot_dir, f"capture_{i + 1}.png")
+        # 将图片保存到绝对路径
+        file_path = os.path.join(absolute_screenshot_dir, f"capture_{i + 1}.png")
         current_image.save(file_path)
         image_paths.append(file_path)
         logger.info(f"截图已保存至 {file_path}")
 
         previous_image = current_image
         
-        # 只有在不是最后一轮才滚动
         if i < max_scrolls - 1:
             scroll_chat_window(wechat_win, scroll_amount)
             time.sleep(delay_between_scrolls)
